@@ -71,6 +71,6 @@ class RecipeMixin:
         return recipes
 
 
-class RecipeTestBase(TestCase, RecipeMixin):
+class RecipeBaseFunctionalTest(TestCase, RecipeMixin):
     def setUp(self) -> None:
         return super().setUp()
