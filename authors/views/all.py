@@ -1,20 +1,22 @@
-from django.shortcuts import render, redirect
-from .templates.authors.forms.register_form import RegisterForm
-from django.http import Http404
+from authors.forms import LoginForm, RegisterForm
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
+from django.http import Http404
+from django.shortcuts import redirect, render
 from django.urls import reverse
-from .templates.authors.forms import LoginForm, RegisterForm
-from .templates.authors.forms.recipe_form import AuthorRecipeForm
 from recipes.models import Recipe
 
-# Create your views here.
+
 def register_view(request):
     register_form_data = request.session.get('register_form_data', None)
     form = RegisterForm(register_form_data)
-    return render(request, 'authors/pages/register_view.html', context={'form': form, 'form_action': reverse('authors:register_create')})
- 
+    return render(request, 'authors/pages/register_view.html', {
+        'form': form,
+        'form_action': reverse('authors:register_create'),
+    })
+
+
 def register_create(request):
     if not request.POST:
         raise Http404()
@@ -31,9 +33,9 @@ def register_create(request):
 
         del(request.session['register_form_data'])
         return redirect(reverse('authors:login'))
-    
-    request.session['register_form_data'] = request.POST
+
     return redirect('authors:register')
+
 
 def login_view(request):
     form = LoginForm()
@@ -65,6 +67,7 @@ def login_create(request):
 
     return redirect(reverse('authors:dashboard'))
 
+
 @login_required(login_url='authors:login', redirect_field_name='next')
 def logout_view(request):
     if not request.POST:
@@ -79,6 +82,7 @@ def logout_view(request):
     logout(request)
     return redirect(reverse('authors:login'))
 
+
 @login_required(login_url='authors:login', redirect_field_name='next')
 def dashboard(request):
     recipes = Recipe.objects.filter(
@@ -90,29 +94,5 @@ def dashboard(request):
         'authors/pages/dashboard.html',
         context={
             'recipes': recipes,
-        }
-    )
-
-@login_required(login_url='authors:login', redirect_field_name='next')
-def dashboard_recipe_edit(request, id):
-    recipe = Recipe.objects.filter(
-        is_published=False,
-        author=request.user,
-        pk=id,
-    ).first()
-
-    if not recipe:
-        raise Http404()
-
-    form = AuthorRecipeForm(
-        data=request.POST or None,
-        instance=recipe
-    )
-
-    return render(
-        request,
-        'authors/pages/dashboard_recipe.html',
-        context={
-            'form': form
         }
     )
